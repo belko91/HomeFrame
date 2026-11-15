@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="it" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Homeframe - Dashboard Fotografia Immobiliare</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="h-full bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 transition-colors duration-200 flex flex-col">
+
+    <!-- SCHERMATA LOGIN / REGISTRAZIONE -->
+    <div id="authScreen" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-4 hidden">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md p-8 border border-slate-200 dark:border-slate-700">
+            <div class="text-center mb-6">
+                <div class="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400 mb-3 text-2xl">
+                    <i class="fa-solid fa-camera-retro"></i>
+                </div>
+                <h1 class="text-2xl font-bold tracking-tight">Homeframe</h1>
+                <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Gestione e rendiconti per Fotografi Immobiliari</p>
+            </div>
+
+            <div id="authError" class="mb-4 p-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-sm rounded-lg hidden"></div>
+
+            <form id="authForm" onsubmit="handleAuth(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">Email</label>
+                    <input type="email" id="authEmail" required class="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-transparent text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">Password</label>
+                    <input type="password" id="authPassword" required class="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-transparent text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+                </div>
+                <div id="nameFieldContainer" class="hidden">
+                    <label class="block text-xs font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">Nome Studio / Fotografo</label>
+                    <input type="text" id="authName" class="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-transparent text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+                </div>
+
+                <button type="submit" id="authSubmitBtn" class="w-full py-3 bg-brand-600 hover:bg-brand-700 text-white font-medium rounded-lg text-sm transition shadow-lg shadow-brand-500/20">Accedi</button>
+            </form>
+
+            <div class="mt-4 text-center">
+                <button type="button" onclick="toggleAuthMode()" id="authSwitchModeBtn" class="text-xs text-brand-600 dark:text-brand-400 hover:underline">Non hai un account? Registrati</button>
+            </div>
+
+            <div class="relative my-6">
+                <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-200 dark:border-slate-700"></div></div>
+                <div class="relative flex justify-center text-xs uppercase"><span class="bg-white dark:bg-slate-800 px-2 text-slate-400">Oppure</span></div>
+            </div>
+
+            <button onclick="loginAsGuest()" class="w-full py-2.5 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-medium rounded-lg text-sm transition">
+                Continua come Ospite (Locale)
+            </button>
+        </div>
+    </div>
+
+    <!-- HEADER FISSO ULTRA-COMPATTO -->
+    <header class="sticky top-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 transition-all duration-200">
+        <div class="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-9 h-9 rounded-lg bg-brand-600 text-white flex items-center justify-center shadow-md shadow-brand-500/20">
+                    <i class="fa-solid fa-camera-retro text-sm"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-base leading-tight tracking-tight">Homeframe</h1>
+                    <p class="text-[10px] text-slate-500 dark:text-slate-400">Real Estate Photography</p>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-3">
+                <!-- Mini Info Utente / Logout -->
+                <div id="userProfileBadge" class="hidden items-center space-x-2 text-xs bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-700">
+                    <span id="currentUserDisplay" class="font-medium text-slate-700 dark:text-slate-300">Ospite</span>
+                    <button onclick="logout()" class="text-red-500 hover:text-red-600 ml-1" title="Esci"><i class="fa-solid fa-power-off"></i></button>
+                </div>
+
+                <!-- Dark Mode Toggle -->
+                <button onclick="toggleDarkMode()" class="w-9 h-9 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                    <i id="themeIcon" class="fa-solid fa-moon text-sm text-slate-600 dark:text-slate-300"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- CONTENUTO PRINCIPALE SCORREVOLE -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 py-6 space-y-6">
+
+        <!-- BARRA NAVIGAZIONE & AZIONI RAPIDE -->
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+            <div class="flex items-center space-x-2">
+                <button onclick="switchTab('dashboard')" id="navTabDashboard" class="px-4 py-2 rounded-lg text-sm font-medium bg-brand-600 text-white transition shadow-sm">
+                    <i class="fa-solid fa-chart-pie mr-2"></i>Dashboard & Analytics
+                </button>
+                <button onclick="switchTab('table')" id="navTabTable" class="px-4 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition">
+                    <i class="fa-solid fa-list mr-2"></i>Gestione Appartamenti
+                </button>
+            </div>
+
+            <div class="flex items-center space-x-2">
+                <button onclick="openModal()" class="flex-1 sm:flex-none px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium transition shadow-sm flex items-center justify-center">
+                    <i class="fa-solid fa-plus mr-2"></i>Nuovo Servizio
+                </button>
+                <button onclick="exportCSV()" class="px-3 py-2 border border-slate-300 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg text-sm font-medium transition" title="Esporta CSV">
+                    <i class="fa-solid fa-download"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- SEZIONE TAB: DASHBOARD & ANALYTICS -->
+        <div id="tabDashboard" class="space-y-6">
+            <!-- FILTRI TEMPORALI -->
+            <div class="flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-slate-800 p-3 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                <div class="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400 px-2">Periodo di riferimento:</div>
+                <div class="flex flex-wrap gap-1.5">
+                    <button onclick="setTimeFilter('today')" id="filterToday" class="px-3 py-1.5 rounded-lg text-xs font-medium transition bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">Oggi</button>
+                    <button onclick="setTimeFilter('week')" id="filterWeek" class="px-3 py-1.5 rounded-lg text-xs font-medium transition bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">Questa Settimana</button>
+                    <button onclick="setTimeFilter('month')" id="filterMonth" class="px-3 py-1.5 rounded-lg text-xs font-medium transition bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">Questo Mese</button>
+                    <button onclick="setTimeFilter('all')" id="filterAll" class="px-3 py-1.5 rounded-lg text-xs font-medium transition bg-brand-600 text-white">Tutto</button>
+                </div>
+            </div>
+
+            <!-- CARDS KPI -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                    <div class="text-xs font-medium text-slate-500 dark:text-slate-400">Servizi Svolti</div>
+                    <div id="kpiCount" class="text-2xl font-bold mt-1">0</div>
+                </div>
+                <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                    <div class="text-xs font-medium text-slate-500 dark:text-slate-400">Incasso Lordo</div>
+                    <div id="kpiGross" class="text-2xl font-bold mt-1 text-brand-600 dark:text-brand-400">€ 0,00</div>
+                </div>
+                <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                    <div class="text-xs font-medium text-slate-500 dark:text-slate-400">Costi Sostenuti</div>
+                    <div id="kpiCosts" class="text-2xl font-bold mt-1 text-red-500">€ 0,00</div>
+                </div>
+                <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                    <div class="text-xs font-medium text-slate-500 dark:text-slate-400">Guadagno Netto</div>
+                    <div id="kpiNet" class="text-2xl font-bold mt-1 text-emerald-600">€ 0,00</div>
+                </div>
+                <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm sm:col-span-2 lg:col-span-1">
+                    <div class="text-xs font-medium text-slate-500 dark:text-slate-400">Media per Servizio</div>
+                    <div id="kpiAvg" class="text-2xl font-bold mt-1">€ 0,00</div>
+                </div>
+            </div>
+
+            <!-- GRAFICI -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm lg:col-span-2 flex flex-col">
+                    <h3 class="text-sm font-semibold mb-4"><i class="fa-solid fa-chart-line mr-2 text-brand-500"></i>Andamento Ricavi vs Costi</h3>
+                    <div class="flex-1 relative min-h-[260px]">
+                        <canvas id="trendChart"></canvas>
+                    </div>
+                </div>
+                <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col">
+                    <h3 class="text-sm font-semibold mb-4"><i class="fa-solid fa-chart-pie mr-2 text-brand-500"></i>Tipologie Servizi</h3>
+                    <div class="flex-1 relative min-h-[260px] flex items-center justify-center">
+                        <canvas id="servicesChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SEZIONE TAB: GESTIONE TABELLA -->
+        <div id="tabTable" class="space-y-4 hidden">
+            <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+                <!-- Filtri Tabella -->
+                <div class="p-4 border-b border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row gap-3 justify-between">
+                    <div class="relative flex-1 max-w-md">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400"><i class="fa-solid fa-search"></i></span>
+                        <input type="text" id="searchInput" oninput="renderTable()" placeholder="Cerca per indirizzo o cliente..." class="w-full pl-9 pr-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-transparent text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+                    </div>
+                    <div>
+                        <select id="typeFilter" onchange="renderTable()" class="px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-transparent text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+                            <option value="">Tutti i tipi di servizio</option>
+                            <option value="Fotografia Standard">Fotografia Standard</option>
+                            <option value="Virtual Tour">Virtual Tour</option>
+                            <option value="Fotografia Standard + Virtual Tour">Fotografia Standard + Virtual Tour</option>
+                            <option value="Video / Drone">Video / Drone</option>
+                            <option value="Pacchetto Completo (Foto + Video + Tour)">Pacchetto Completo (Foto + Video + Tour)</option>
+                            <option value="Altro">Altro</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Tabella Dati -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead>
+                            <tr class="bg-slate-50 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider border-b border-slate-200 dark:border-slate-700">
+                                <th class="p-4 font-semibold">Data</th>
+                                <th class="p-4 font-semibold">Indirizzo / Cliente</th>
+                                <th class="p-4 font-semibold">Tipologia</th>
+                                <th class="p-4 font-semibold">Lordo</th>
+                                <th class="p-4 font-semibold">Costi</th>
+                                <th class="p-4 font-semibold">Netto</th>
+                                <th class="p-4 font-semibold text-right">Azioni</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody" class="divide-y divide-slate-200 dark:divide-slate-700">
+                            <!-- Popolato dinamicamente -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="emptyState" class="p-8 text-center hidden">
+                    <div class="text-slate-400 text-3xl mb-2"><i class="fa-solid fa-folder-open"></i></div>
+                    <p class="text-slate-500 dark:text-slate-400 text-sm">Nessun appartamento registrato. Clicca su "+ Nuovo Servizio" per iniziare.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- MODALE INSERIMENTO / MODIFICA -->
+    <div id="serviceModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-4 hidden">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-lg p-6 border border-slate-200 dark:border-slate-700 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-4">
+                <h3 id="modalTitle" class="text-lg font-bold">Nuovo Servizio Immobiliare</h3>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+
+            <form id="serviceForm" onsubmit="saveService(event)" class="space-y-4">
+                <input type="hidden" id="serviceId">
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">Indirizzo immobile / Nome Cliente *</label>
+                    <input type="text" id="serviceAddress" required placeholder="Es. Via Roma 10, Milano (Cliente Rossi)" class="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-transparent text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">Data Servizio *</label>
+                        <input type="date" id="serviceDate" required class="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-transparent text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">Tipologia Servizio *</label>
+                        <select id="serviceType" required class="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-transparent text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+                            <option value="Fotografia Standard">Fotografia Standard</option>
+                            <option value="Virtual Tour">Virtual Tour</option>
+                            <option value="Fotografia Standard + Virtual Tour">Fotografia Standard + Virtual Tour</option>
+                            <option value="Video / Drone">Video / Drone</option>
+                            <option value="Pacchetto Completo (Foto + Video + Tour)">Pacchetto Completo (Foto + Video + Tour)</option>
+                            <option value="Altro">Altro</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">Prezzo Lordo (€) *</label>
+                        <input type="number" step="0.01" id="servicePrice" required placeholder="0.00" class="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-transparent text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">Costi Sostenuti (€)</label>
+                        <input type="number" step="0.01" id="serviceCosts" value="0" placeholder="0.00" class="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-transparent text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">Note / Dettagli aggiuntivi</label>
+                    <textarea id="serviceNotes" rows="2" placeholder="Es. Consegna express, rimborso benzina..." class="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-transparent text-sm focus:ring-2 focus:ring-brand-500 outline-none"></textarea>
+                </div>
+
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-700 transition">Annulla</button>
+                    <button type="submit" class="px-5 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-sm font-medium transition shadow-sm">Salva Servizio</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- LOGICA JAVASCRIPT -->
+    <script>
+        // Stato Applicazione
+        let services = [];
+        let currentFilter = 'all';
+        let isDarkMode = false;
+        let currentUser = null;
+        let isRegisterMode = false;
+        let trendChartInstance = null;
+        let servicesChartInstance = null;
+
+        // Inizializzazione all'avvio
+        document.addEventListener('DOMContentLoaded', () => {
+            // Controllo Dark Mode
+            if (localStorage.getItem('homeframe_dark') === 'true') {
+                isDarkMode = true;
+                document.documentElement.classList.add('dark');
+                updateThemeIcon();
+            }
+
+            // Controllo Autenticazione / Account
+            const savedUser = localStorage.getItem('homeframe_current_user');
+            if (savedUser) {
+                currentUser = savedUser;
+                document.getElementById('authScreen').classList.add('hidden');
+                updateUserProfileBadge();
+                loadUserData();
+            } else {
+                // Mostra modale login se non autenticato
+                document.getElementById('authScreen').classList.remove('hidden');
+            }
+
+            // Data odierna di default nel form
+            document.getElementById('serviceDate').valueAsDate = new Date();
+            initCharts();
+            updateDashboard();
+        });
+
+        // Gestione Autenticazione
+        function toggleAuthMode() {
+            isRegisterMode = !isRegisterMode;
+            document.getElementById('nameFieldContainer').classList.toggle('hidden', !isRegisterMode);
+            document.getElementById('authSubmitBtn').textContent = isRegisterMode ? 'Registrati' : 'Accedi';
+            document.getElementById('authSwitchModeBtn').textContent = isRegisterMode ? 'Hai già un account? Accedi' : 'Non hai un account? Registrati';
+        }
+
+        function handleAuth(event) {
+            event.preventDefault();
+            const email = document.getElementById('authEmail').value.trim();
+            const pass = document.getElementById('authPassword').value;
+            const name = document.getElementById('authName').value.trim();
+
+            if (!email || !pass) return;
+
+            currentUser = name ? `${name} (${email})` : email;
+            localStorage.setItem('homeframe_current_user', currentUser);
+            document.getElementById('authScreen').classList.add('hidden');
+            updateUserProfileBadge();
+            loadUserData();
+        }
+
+        function loginAsGuest() {
+            currentUser = 'Ospite';
+            localStorage.setItem('homeframe_current_user', currentUser);
+            document.getElementById('authScreen').classList.add('hidden');
+            updateUserProfileBadge();
+            loadUserData();
+        }
+
+        function logout() {
+            localStorage.removeItem('homeframe_current_user');
+            currentUser = null;
+            services = [];
+            document.getElementById('authEmail').value = '';
+            document.getElementById('authPassword').value = '';
+            document.getElementById('authScreen').classList.remove('hidden');
+        }
+
+        function updateUserProfileBadge() {
+            const badge = document.getElementById('userProfileBadge');
+            const display = document.getElementById('currentUserDisplay');
+            if (currentUser) {
+                display.textContent = currentUser;
+                badge.classList.remove('hidden');
+                badge.classList.add('flex');
+            } else {
+                badge.classList.add('hidden');
+                badge.classList.remove('flex');
+            }
+        }
+
+        function loadUserData() {
+            const storageKey = `homeframe_data_${currentUser || 'guest'}`;
+            const data = localStorage.getItem(storageKey);
+            services = data ? JSON.parse(data) : [];
+            updateDashboard();
+            renderTable();
+        }
+
+        function saveUserData() {
+            const storageKey = `homeframe_data_${currentUser || 'guest'}`;
+            localStorage.setItem(storageKey, JSON.stringify(services));
+        }
+
+        // Navigazione Tab
+        function switchTab(tab) {
+            const isDash = tab === 'dashboard';
+            document.getElementById('tabDashboard').classList.toggle('hidden', !isDash);
+            document.getElementById('tabTable').classList.toggle('hidden', isDash);
+
+            document.getElementById('navTabDashboard').className = isDash 
+                ? 'px-4 py-2 rounded-lg text-sm font-medium bg-brand-600 text-white transition shadow-sm'
+                : 'px-4 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition';
+            
+            document.getElementById('navTabTable').className = !isDash 
+                ? 'px-4 py-2 rounded-lg text-sm font-medium bg-brand-600 text-white transition shadow-sm'
+                : 'px-4 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition';
+
+            if (isDash) updateCharts();
+        }
+
+        // Filtri Temporali
+        function setTimeFilter(filter) {
+            currentFilter = filter;
+            ['today', 'week', 'month', 'all'].forEach(f => {
+                const btn = document.getElementById(`filter${f.charAt(0).toUpperCase() + f.slice(1)}`);
+                if (f === filter) {
+                    btn.className = 'px-3 py-1.5 rounded-lg text-xs font-medium transition bg-brand-600 text-white';
+                } else {
+                    btn.className = 'px-3 py-1.5 rounded-lg text-xs font-medium transition bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300';
+                }
+            });
+            updateDashboard();
+        }
+
+        // Filtro Dati in base al periodo
+        function getFilteredServices() {
+            const now = new Date();
+            return services.filter(s => {
+                const sDate = new Date(s.date);
+                if (currentFilter === 'today') {
+                    return sDate.toDateString() === now.toDateString();
+                } else if (currentFilter === 'week') {
+                    const startOfWeek = new Date(now);
+                    startOfWeek.setDate(now.getDate() - now.getDay() + (now.getDay() === 0 ? -6 : 1));
+                    startOfWeek.setHours(0,0,0,0);
+                    return sDate >= startOfWeek;
+                } else if (currentFilter === 'month') {
+                    return sDate.getMonth() === now.getMonth() && sDate.getFullYear() === now.getFullYear();
+                }
+                return true;
+            });
+        }
+
+        // Aggiornamento KPI & Dashboard
+        function updateDashboard() {
+            const filtered = getFilteredServices();
+            const count = filtered.length;
+            const gross = filtered.reduce((acc, s) => acc + Number(s.price), 0);
+            const costs = filtered.reduce((acc, s) => acc + Number(s.costs || 0), 0);
+            const net = gross - costs;
+            const avg = count > 0 ? net / count : 0;
+
+            document.getElementById('kpiCount').textContent = count;
+            document.getElementById('kpiGross').textContent = formatCurrency(gross);
+            document.getElementById('kpiCosts').textContent = formatCurrency(costs);
+            document.getElementById('kpiNet').textContent = formatCurrency(net);
+            document.getElementById('kpiAvg').textContent = formatCurrency(avg);
+
+            updateCharts();
+        }
+
+        function formatCurrency(val) {
+            return '€ ' + val.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        // Gestione Modale Servizio
+        function openModal(id = null) {
+            document.getElementById('serviceModal').classList.remove('hidden');
+            if (id) {
+                document.getElementById('modalTitle').textContent = 'Modifica Servizio';
+                const s = services.find(item => item.id === id);
+                if (s) {
+                    document.getElementById('serviceId').value = s.id;
+                    document.getElementById('serviceAddress').value = s.address;
+                    document.getElementById('serviceDate').value = s.date;
+                    document.getElementById('serviceType').value = s.type;
+                    document.getElementById('servicePrice').value = s.price;
+                    document.getElementById('serviceCosts').value = s.costs || 0;
+                    document.getElementById('serviceNotes').value = s.notes || '';
+                }
+            } else {
+                document.getElementById('modalTitle').textContent = 'Nuovo Servizio Immobiliare';
+                document.getElementById('serviceForm').reset();
+                document.getElementById('serviceId').value = '';
+                document.getElementById('serviceDate').valueAsDate = new Date();
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('serviceModal').classList.add('hidden');
+        }
+
+        function saveService(event) {
+            event.preventDefault();
+            const id = document.getElementById('serviceId').value;
+            const address = document.getElementById('serviceAddress').value;
+            const date = document.getElementById('serviceDate').value;
+            const type = document.getElementById('serviceType').value;
+            const price = parseFloat(document.getElementById('servicePrice').value) || 0;
+            const costs = parseFloat(document.getElementById('serviceCosts').value) || 0;
+            const notes = document.getElementById('serviceNotes').value;
+
+            if (id) {
+                const idx = services.findIndex(s => s.id == id);
+                if (idx !== -1) {
+                    services[idx] = { id: Number(id), address, date, type, price, costs, notes };
+                }
+            } else {
+                const newService = { id: Date.now(), address, date, type, price, costs, notes };
+                services.push(newService);
+            }
+
+            saveUserData();
+            closeModal();
+            updateDashboard();
+            renderTable();
+        }
+
+        function deleteService(id) {
+            if (confirm('Sei sicuro di voler eliminare questo servizio?')) {
+                services = services.filter(s => s.id !== id);
+                saveUserData();
+                updateDashboard();
+                renderTable();
+            }
+        }
+
+        // Tabella
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            const emptyState = document.getElementById('emptyState');
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const typeFilter = document.getElementById('typeFilter').value;
+
+            const filtered = services.filter(s => {
+                const matchSearch = s.address.toLowerCase().includes(search);
+                const matchType = !typeFilter || s.type === typeFilter;
+                return matchSearch && matchType;
+            }).sort((a,b) => new Date(b.date) - new Date(a.date));
+
+            tbody.innerHTML = '';
+            if (filtered.length === 0) {
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            emptyState.classList.add('hidden');
+
+            filtered.forEach(s => {
+                const net = s.price - (s.costs || 0);
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50 dark:hover:bg-slate-700/30 transition';
+                tr.innerHTML = `
+                    <td class="p-4 whitespace-nowrap text-slate-500 dark:text-slate-400">${formatDate(s.date)}</td>
+                    <td class="p-4 font-medium">${escapeHTML(s.address)}</td>
+                    <td class="p-4"><span class="px-2.5 py-1 rounded-full text-xs font-medium bg-brand-50 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400">${escapeHTML(s.type)}</span></td>
+                    <td class="p-4 font-semibold text-brand-600 dark:text-brand-400">${formatCurrency(s.price)}</td>
+                    <td class="p-4 text-red-500">${formatCurrency(s.costs || 0)}</td>
+                    <td class="p-4 font-semibold text-emerald-600">${formatCurrency(net)}</td>
+                    <td class="p-4 text-right space-x-2">
+                        <button onclick="openModal(${s.id})" class="text-slate-400 hover:text-brand-600 transition" title="Modifica"><i class="fa-solid fa-pen"></i></button>
+                        <button onclick="deleteService(${s.id})" class="text-slate-400 hover:text-red-500 transition" title="Elimina"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            const p = dateStr.split('-');
+            return `${p[2]}/${p[1]}/${p[0]}`;
+        }
+
+        function escapeHTML(str) {
+            return str.replace(/[&<>'"]/g, 
+                tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+            );
+        }
+
+        // Grafici Chart.js
+        function initCharts() {
+            const ctxTrend = document.getElementById('trendChart').getContext('2d');
+            trendChartInstance = new Chart(ctxTrend, {
+                type: 'bar',
+                data: { labels: [], datasets: [
+                    { label: 'Ricavi Lordi', data: [], backgroundColor: '#6366f1', borderRadius: 4 },
+                    { label: 'Costi', data: [], backgroundColor: '#ef4444', borderRadius: 4 }
+                ]},
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+            });
+
+            const ctxServices = document.getElementById('servicesChart').getContext('2d');
+            servicesChartInstance = new Chart(ctxServices, {
+                type: 'doughnut',
+                data: { labels: [], datasets: [{ data: [], backgroundColor: ['#6366f1', '#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6'] }]},
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+            });
+        }
+
+        function updateCharts() {
+            if (!trendChartInstance || !servicesChartInstance) return;
+            const filtered = getFilteredServices();
+
+            // Raggruppa per data per il grafico trend
+            const grouped = {};
+            filtered.sort((a,b) => new Date(a.date) - new Date(b.date)).forEach(s => {
+                if (!grouped[s.date]) grouped[s.date] = { gross: 0, costs: 0 };
+                grouped[s.date].gross += Number(s.price);
+                grouped[s.date].costs += Number(s.costs || 0);
+            });
+
+            trendChartInstance.data.labels = Object.keys(grouped).map(d => formatDate(d));
+            trendChartInstance.data.datasets[0].data = Object.values(grouped).map(g => g.gross);
+            trendChartInstance.data.datasets[1].data = Object.values(grouped).map(g => g.costs);
+            trendChartInstance.update();
+
+            // Raggruppa per tipologia servizi
+            const types = {};
+            filtered.forEach(s => {
+                types[s.type] = (types[s.type] || 0) + 1;
+            });
+
+            servicesChartInstance.data.labels = Object.keys(types);
+            servicesChartInstance.data.datasets[0].data = Object.values(types);
+            servicesChartInstance.update();
+        }
+
+        // Esportazione CSV
+        function exportCSV() {
+            if (services.length === 0) {
+                alert('Nessun dato da esportare.');
+                return;
+            }
+            let csv = 'Data,Indirizzo/Cliente,Tipologia,Prezzo Lordo,Costi,Guadagno Netto,Note\n';
+            services.forEach(s => {
+                const net = s.price - (s.costs || 0);
+                csv += `"${s.date}","${s.address}","${s.type}",${s.price},${s.costs || 0},${net},"${s.notes || ''}"\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.setAttribute('href', url);
+            a.setAttribute('download', 'homeframe_report.csv');
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        // Dark Mode
+        function toggleDarkMode() {
+            isDarkMode = !isDarkMode;
+            document.documentElement.classList.toggle('dark', isDarkMode);
+            localStorage.setItem('homeframe_dark', isDarkMode);
+            updateThemeIcon();
+        }
+
+        function updateThemeIcon() {
+            const icon = document.getElementById('themeIcon');
+            icon.className = isDarkMode ? 'fa-solid fa-sun text-sm text-yellow-400' : 'fa-solid fa-moon text-sm text-slate-600';
+        }
+    </script>
+</body>
+</html>
