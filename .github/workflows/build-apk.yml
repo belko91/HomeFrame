@@ -1,0 +1,33 @@
+name: Build and Deploy PWA
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Verify build files
+        run: |
+          echo "Verifying index.html presence..."
+          if [ -f "index.html" ]; then
+            echo "index.html found successfully."
+          else
+            echo "Error: index.html not found!"
+            exit 1
+          fi
+
+      - name: Upload Pages Artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
