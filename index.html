@@ -32,7 +32,7 @@
     <!-- Firebase SDKs -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         // CONFIGURAZIONE FIREBASE
@@ -50,20 +50,45 @@
         const db = getFirestore(app);
         const googleProvider = new GoogleAuthProvider();
 
-        // Utilizza signInWithRedirect per compatibilità nativa con WebView/APK Android
+        // Login con Google (usiamo popup che funziona perfettamente sul web)
         window.loginWithGoogle = async function() {
             try {
-                await signInWithRedirect(auth, googleProvider);
+                await signInWithPopup(auth, googleProvider);
             } catch (error) {
                 console.error("Errore login Google:", error);
                 alert("Errore durante l'accesso con Google: " + error.message);
             }
         };
 
-        // Gestisce il risultato del reindirizzamento al ritorno da Google
-        getRedirectResult(auth).catch((error) => {
-            console.error("Errore redirect Google:", error);
-        });
+        // Login con Email e Password
+        window.loginWithEmail = async function(event) {
+            event.preventDefault();
+            const email = document.getElementById('authEmail').value;
+            const password = document.getElementById('authPassword').value;
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+            } catch (error) {
+                console.error("Errore login email:", error);
+                alert("Errore di accesso: " + error.message);
+            }
+        };
+
+        // Registrazione rapida con Email e Password
+        window.registerWithEmail = async function() {
+            const email = document.getElementById('authEmail').value;
+            const password = document.getElementById('authPassword').value;
+            if (!email || !password) {
+                alert("Inserisci prima un'email e una password valide.");
+                return;
+            }
+            try {
+                await createUserWithEmailAndPassword(auth, email, password);
+                alert("Account creato con successo e accesso effettuato!");
+            } catch (error) {
+                console.error("Errore registrazione:", error);
+                alert("Errore durante la registrazione: " + error.message);
+            }
+        };
 
         window.logoutUser = async function() {
             await signOut(auth);
@@ -119,18 +144,43 @@
 </head>
 <body class="h-full bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 transition-colors duration-200 flex flex-col">
 
-    <!-- SCHERMATA LOGIN / GOOGLE -->
+    <!-- SCHERMATA LOGIN / ACCESSO -->
     <div id="authScreen" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-4 hidden">
-        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md p-8 border border-slate-200 dark:border-slate-700 text-center">
-            <div class="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400 mb-3 text-2xl">
-                <i class="fa-solid fa-camera-retro"></i>
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md p-8 border border-slate-200 dark:border-slate-700">
+            <div class="text-center mb-6">
+                <div class="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400 mb-3 text-2xl">
+                    <i class="fa-solid fa-camera-retro"></i>
+                </div>
+                <h1 class="text-2xl font-bold tracking-tight">Homeframe</h1>
+                <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Sincronizza i tuoi servizi su tutti i dispositivi</p>
             </div>
-            <h1 class="text-2xl font-bold tracking-tight">Homeframe</h1>
-            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1 mb-6">Sincronizza i tuoi servizi su tutti i dispositivi</p>
 
+            <!-- Form Email e Password -->
+            <form onsubmit="loginWithEmail(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">Email</label>
+                    <input type="email" id="authEmail" required placeholder="tuamail@esempio.it" class="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-transparent text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">Password</label>
+                    <input type="password" id="authPassword" required placeholder="••••••••" class="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-transparent text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+                </div>
+
+                <div class="flex items-center gap-3 pt-2">
+                    <button type="submit" class="flex-1 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-sm font-medium transition shadow-sm">Accedi</button>
+                    <button type="button" onclick="registerWithEmail()" class="flex-1 py-2.5 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-lg text-sm font-medium transition">Registrati</button>
+                </div>
+            </form>
+
+            <div class="relative my-6">
+                <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-200 dark:border-slate-700"></div></div>
+                <div class="relative flex justify-center text-xs uppercase"><span class="bg-white dark:bg-slate-800 px-2 text-slate-400">Oppure</span></div>
+            </div>
+
+            <!-- Pulsante Google -->
             <button type="button" onclick="loginWithGoogle()" class="w-full py-3 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-600 font-medium rounded-lg text-sm transition flex items-center justify-center space-x-3 shadow-sm">
                 <i class="fa-brands fa-google text-red-500 text-lg"></i>
-                <span>Accedi con Google</span>
+                <span>Connettiti con Google</span>
             </button>
         </div>
     </div>
