@@ -61,6 +61,14 @@
                 <button type="submit" id="authSubmitBtn" class="w-full py-3 bg-brand-600 hover:bg-brand-700 text-white font-medium rounded-lg text-sm transition shadow-lg shadow-brand-500/20">Accedi</button>
             </form>
 
+            <!-- Pulsante Login con Google -->
+            <div class="mt-3">
+                <button type="button" onclick="loginWithGoogle()" class="w-full py-2.5 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-600 font-medium rounded-lg text-sm transition flex items-center justify-center space-x-2 shadow-sm">
+                    <i class="fa-brands fa-google text-red-500"></i>
+                    <span>Accedi con Google</span>
+                </button>
+            </div>
+
             <div class="mt-4 text-center">
                 <button type="button" onclick="toggleAuthMode()" id="authSwitchModeBtn" class="text-xs text-brand-600 dark:text-brand-400 hover:underline">Non hai un account? Registrati</button>
             </div>
@@ -76,7 +84,7 @@
         </div>
     </div>
 
-    <!-- HEADER FISSO ULTRA-COMPATTO -->
+    <!-- HEADER FISSO -->
     <header class="sticky top-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 transition-all duration-200">
         <div class="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between">
             <div class="flex items-center space-x-3">
@@ -90,13 +98,11 @@
             </div>
 
             <div class="flex items-center space-x-3">
-                <!-- Mini Info Utente / Logout -->
                 <div id="userProfileBadge" class="hidden items-center space-x-2 text-xs bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-700">
                     <span id="currentUserDisplay" class="font-medium text-slate-700 dark:text-slate-300">Ospite</span>
                     <button onclick="logout()" class="text-red-500 hover:text-red-600 ml-1" title="Esci"><i class="fa-solid fa-power-off"></i></button>
                 </div>
 
-                <!-- Dark Mode Toggle -->
                 <button onclick="toggleDarkMode()" class="w-9 h-9 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 transition">
                     <i id="themeIcon" class="fa-solid fa-moon text-sm text-slate-600 dark:text-slate-300"></i>
                 </button>
@@ -104,17 +110,20 @@
         </div>
     </header>
 
-    <!-- CONTENUTO PRINCIPALE SCORREVOLE -->
+    <!-- CONTENUTO PRINCIPALE -->
     <main class="flex-1 max-w-7xl w-full mx-auto px-4 py-6 space-y-6">
 
-        <!-- BARRA NAVIGAZIONE & AZIONI RAPIDE -->
+        <!-- NAVIGAZIONE SCHEDE -->
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
-            <div class="flex items-center space-x-2">
+            <div class="flex flex-wrap items-center gap-2">
                 <button onclick="switchTab('dashboard')" id="navTabDashboard" class="px-4 py-2 rounded-lg text-sm font-medium bg-brand-600 text-white transition shadow-sm">
                     <i class="fa-solid fa-chart-pie mr-2"></i>Dashboard & Analytics
                 </button>
                 <button onclick="switchTab('table')" id="navTabTable" class="px-4 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition">
                     <i class="fa-solid fa-list mr-2"></i>Gestione Appartamenti
+                </button>
+                <button onclick="switchTab('calendar')" id="navTabCalendar" class="px-4 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition">
+                    <i class="fa-solid fa-calendar-days mr-2"></i>Calendario Appuntamenti
                 </button>
             </div>
 
@@ -128,9 +137,8 @@
             </div>
         </div>
 
-        <!-- SEZIONE TAB: DASHBOARD & ANALYTICS -->
+        <!-- TAB 1: DASHBOARD -->
         <div id="tabDashboard" class="space-y-6">
-            <!-- FILTRI TEMPORALI -->
             <div class="flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-slate-800 p-3 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
                 <div class="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400 px-2">Periodo di riferimento:</div>
                 <div class="flex flex-wrap gap-1.5">
@@ -141,7 +149,6 @@
                 </div>
             </div>
 
-            <!-- CARDS KPI -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                 <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
                     <div class="text-xs font-medium text-slate-500 dark:text-slate-400">Servizi Svolti</div>
@@ -165,7 +172,6 @@
                 </div>
             </div>
 
-            <!-- GRAFICI -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm lg:col-span-2 flex flex-col">
                     <h3 class="text-sm font-semibold mb-4"><i class="fa-solid fa-chart-line mr-2 text-brand-500"></i>Andamento Ricavi vs Costi</h3>
@@ -182,10 +188,9 @@
             </div>
         </div>
 
-        <!-- SEZIONE TAB: GESTIONE TABELLA -->
+        <!-- TAB 2: TABELLA APPARTAMENTI -->
         <div id="tabTable" class="space-y-4 hidden">
             <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
-                <!-- Filtri Tabella -->
                 <div class="p-4 border-b border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row gap-3 justify-between">
                     <div class="relative flex-1 max-w-md">
                         <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400"><i class="fa-solid fa-search"></i></span>
@@ -204,7 +209,6 @@
                     </div>
                 </div>
 
-                <!-- Tabella Dati -->
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse text-sm">
                         <thead>
@@ -218,15 +222,33 @@
                                 <th class="p-4 font-semibold text-right">Azioni</th>
                             </tr>
                         </thead>
-                        <tbody id="tableBody" class="divide-y divide-slate-200 dark:divide-slate-700">
-                            <!-- Popolato dinamicamente -->
-                        </tbody>
+                        <tbody id="tableBody" class="divide-y divide-slate-200 dark:divide-slate-700"></tbody>
                     </table>
                 </div>
 
                 <div id="emptyState" class="p-8 text-center hidden">
                     <div class="text-slate-400 text-3xl mb-2"><i class="fa-solid fa-folder-open"></i></div>
                     <p class="text-slate-500 dark:text-slate-400 text-sm">Nessun appartamento registrato. Clicca su "+ Nuovo Servizio" per iniziare.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: CALENDARIO APPUNTAMENTI -->
+        <div id="tabCalendar" class="space-y-6 hidden">
+            <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                    <div>
+                        <h2 class="text-lg font-bold">📅 Calendario Servizi & Scadenze</h2>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Seleziona una data per visualizzare i servizi programmati in quel giorno.</p>
+                    </div>
+                    <div>
+                        <input type="date" id="calendarPicker" onchange="renderCalendarDayView()" class="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-transparent text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+                    </div>
+                </div>
+
+                <div class="border-t border-slate-200 dark:border-slate-700 pt-6">
+                    <h3 id="calendarSelectedDateTitle" class="text-sm font-semibold mb-4 text-brand-600 dark:text-brand-400">Servizi per la data selezionata:</h3>
+                    <div id="calendarDayServices" class="space-y-3"></div>
                 </div>
             </div>
         </div>
@@ -291,7 +313,6 @@
 
     <!-- LOGICA JAVASCRIPT -->
     <script>
-        // Stato Applicazione
         let services = [];
         let currentFilter = 'all';
         let isDarkMode = false;
@@ -300,16 +321,13 @@
         let trendChartInstance = null;
         let servicesChartInstance = null;
 
-        // Inizializzazione all'avvio
         document.addEventListener('DOMContentLoaded', () => {
-            // Controllo Dark Mode
             if (localStorage.getItem('homeframe_dark') === 'true') {
                 isDarkMode = true;
                 document.documentElement.classList.add('dark');
                 updateThemeIcon();
             }
 
-            // Controllo Autenticazione / Account
             const savedUser = localStorage.getItem('homeframe_current_user');
             if (savedUser) {
                 currentUser = savedUser;
@@ -317,17 +335,28 @@
                 updateUserProfileBadge();
                 loadUserData();
             } else {
-                // Mostra modale login se non autenticato
                 document.getElementById('authScreen').classList.remove('hidden');
             }
 
-            // Data odierna di default nel form
             document.getElementById('serviceDate').valueAsDate = new Date();
+            document.getElementById('calendarPicker').valueAsDate = new Date();
             initCharts();
             updateDashboard();
         });
 
-        // Gestione Autenticazione
+        function toggleDarkMode() {
+            isDarkMode = !isDarkMode;
+            document.documentElement.classList.toggle('dark', isDarkMode);
+            localStorage.setItem('homeframe_dark', isDarkMode);
+            updateThemeIcon();
+            updateCharts();
+        }
+
+        function updateThemeIcon() {
+            const icon = document.getElementById('themeIcon');
+            icon.className = isDarkMode ? 'fa-solid fa-sun text-sm text-yellow-400' : 'fa-solid fa-moon text-sm text-slate-600';
+        }
+
         function toggleAuthMode() {
             isRegisterMode = !isRegisterMode;
             document.getElementById('nameFieldContainer').classList.toggle('hidden', !isRegisterMode);
@@ -344,6 +373,15 @@
             if (!email || !pass) return;
 
             currentUser = name ? `${name} (${email})` : email;
+            localStorage.setItem('homeframe_current_user', currentUser);
+            document.getElementById('authScreen').classList.add('hidden');
+            updateUserProfileBadge();
+            loadUserData();
+        }
+
+        function loginWithGoogle() {
+            // Predisposto per l'integrazione Firebase Google Auth
+            currentUser = "Utente Google (fotografo@gmail.com)";
             localStorage.setItem('homeframe_current_user', currentUser);
             document.getElementById('authScreen').classList.add('hidden');
             updateUserProfileBadge();
@@ -386,6 +424,7 @@
             services = data ? JSON.parse(data) : [];
             updateDashboard();
             renderTable();
+            renderCalendarDayView();
         }
 
         function saveUserData() {
@@ -393,24 +432,31 @@
             localStorage.setItem(storageKey, JSON.stringify(services));
         }
 
-        // Navigazione Tab
         function switchTab(tab) {
             const isDash = tab === 'dashboard';
+            const isTable = tab === 'table';
+            const isCalendar = tab === 'calendar';
+
             document.getElementById('tabDashboard').classList.toggle('hidden', !isDash);
-            document.getElementById('tabTable').classList.toggle('hidden', isDash);
+            document.getElementById('tabTable').classList.toggle('hidden', !isTable);
+            document.getElementById('tabCalendar').classList.toggle('hidden', !isCalendar);
 
             document.getElementById('navTabDashboard').className = isDash 
                 ? 'px-4 py-2 rounded-lg text-sm font-medium bg-brand-600 text-white transition shadow-sm'
                 : 'px-4 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition';
             
-            document.getElementById('navTabTable').className = !isDash 
+            document.getElementById('navTabTable').className = isTable 
+                ? 'px-4 py-2 rounded-lg text-sm font-medium bg-brand-600 text-white transition shadow-sm'
+                : 'px-4 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition';
+
+            document.getElementById('navTabCalendar').className = isCalendar 
                 ? 'px-4 py-2 rounded-lg text-sm font-medium bg-brand-600 text-white transition shadow-sm'
                 : 'px-4 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition';
 
             if (isDash) updateCharts();
+            if (isCalendar) renderCalendarDayView();
         }
 
-        // Filtri Temporali
         function setTimeFilter(filter) {
             currentFilter = filter;
             ['today', 'week', 'month', 'all'].forEach(f => {
@@ -424,7 +470,6 @@
             updateDashboard();
         }
 
-        // Filtro Dati in base al periodo
         function getFilteredServices() {
             const now = new Date();
             return services.filter(s => {
@@ -443,7 +488,6 @@
             });
         }
 
-        // Aggiornamento KPI & Dashboard
         function updateDashboard() {
             const filtered = getFilteredServices();
             const count = filtered.length;
@@ -465,7 +509,6 @@
             return '€ ' + val.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
 
-        // Gestione Modale Servizio
         function openModal(id = null) {
             document.getElementById('serviceModal').classList.remove('hidden');
             if (id) {
@@ -516,6 +559,7 @@
             closeModal();
             updateDashboard();
             renderTable();
+            renderCalendarDayView();
         }
 
         function deleteService(id) {
@@ -524,10 +568,10 @@
                 saveUserData();
                 updateDashboard();
                 renderTable();
+                renderCalendarDayView();
             }
         }
 
-        // Tabella
         function renderTable() {
             const tbody = document.getElementById('tableBody');
             const emptyState = document.getElementById('emptyState');
@@ -535,10 +579,10 @@
             const typeFilter = document.getElementById('typeFilter').value;
 
             const filtered = services.filter(s => {
-                const matchSearch = s.address.toLowerCase().includes(search);
+                const matchSearch = s.address.toLowerCase().includes(search) || (s.notes && s.notes.toLowerCase().includes(search));
                 const matchType = !typeFilter || s.type === typeFilter;
                 return matchSearch && matchType;
-            }).sort((a,b) => new Date(b.date) - new Date(a.date));
+            }).sort((a, b) => new Date(b.date) - new Date(a.date));
 
             tbody.innerHTML = '';
             if (filtered.length === 0) {
@@ -552,14 +596,17 @@
                 const tr = document.createElement('tr');
                 tr.className = 'hover:bg-slate-50 dark:hover:bg-slate-700/30 transition';
                 tr.innerHTML = `
-                    <td class="p-4 whitespace-nowrap text-slate-500 dark:text-slate-400">${formatDate(s.date)}</td>
-                    <td class="p-4 font-medium">${escapeHTML(s.address)}</td>
-                    <td class="p-4"><span class="px-2.5 py-1 rounded-full text-xs font-medium bg-brand-50 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400">${escapeHTML(s.type)}</span></td>
+                    <td class="p-4 font-medium text-slate-600 dark:text-slate-300 whitespace-nowrap">${formatDate(s.date)}</td>
+                    <td class="p-4 font-medium">
+                        <div>${escapeHtml(s.address)}</div>
+                        ${s.notes ? `<div class="text-xs text-slate-400 mt-0.5">${escapeHtml(s.notes)}</div>` : ''}
+                    </td>
+                    <td class="p-4"><span class="px-2.5 py-1 rounded-full text-xs font-medium bg-brand-50 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400">${escapeHtml(s.type)}</span></td>
                     <td class="p-4 font-semibold text-brand-600 dark:text-brand-400">${formatCurrency(s.price)}</td>
                     <td class="p-4 text-red-500">${formatCurrency(s.costs || 0)}</td>
-                    <td class="p-4 font-semibold text-emerald-600">${formatCurrency(net)}</td>
-                    <td class="p-4 text-right space-x-2">
-                        <button onclick="openModal(${s.id})" class="text-slate-400 hover:text-brand-600 transition" title="Modifica"><i class="fa-solid fa-pen"></i></button>
+                    <td class="p-4 font-bold text-emerald-600">${formatCurrency(net)}</td>
+                    <td class="p-4 text-right space-x-2 whitespace-nowrap">
+                        <button onclick="openModal(${s.id})" class="text-slate-400 hover:text-brand-600 transition" title="Modifica"><i class="fa-solid fa-pen-to-square"></i></button>
                         <button onclick="deleteService(${s.id})" class="text-slate-400 hover:text-red-500 transition" title="Elimina"><i class="fa-solid fa-trash"></i></button>
                     </td>
                 `;
@@ -567,99 +614,83 @@
             });
         }
 
+        function renderCalendarDayView() {
+            const picker = document.getElementById('calendarPicker').value;
+            const container = document.getElementById('calendarDayServices');
+            const title = document.getElementById('calendarSelectedDateTitle');
+
+            if (!picker) return;
+
+            title.textContent = `Servizi programmati per il ${formatDate(picker)}:`;
+            const dayServices = services.filter(s => s.date === picker);
+
+            container.innerHTML = '';
+            if (dayServices.length === 0) {
+                container.innerHTML = `<p class="text-sm text-slate-500 dark:text-slate-400 italic">Nessun servizio in programma in questa data.</p>`;
+                return;
+            }
+
+            dayServices.forEach(s => {
+                const net = s.price - (s.costs || 0);
+                const card = document.createElement('div');
+                card.className = 'p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/20 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3';
+                card.innerHTML = `
+                    <div>
+                        <div class="font-bold text-base text-slate-800 dark:text-slate-100">${escapeHtml(s.address)}</div>
+                        <div class="text-xs text-brand-600 dark:text-brand-400 font-medium mt-0.5">${escapeHtml(s.type)}</div>
+                        ${s.notes ? `<div class="text-xs text-slate-500 dark:text-slate-400 mt-1">Note: ${escapeHtml(s.notes)}</div>` : ''}
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <div class="text-right">
+                            <div class="text-xs text-slate-500">Lordo: <span class="font-semibold text-brand-600">${formatCurrency(s.price)}</span></div>
+                            <div class="text-xs text-emerald-600 font-bold">Netto: ${formatCurrency(net)}</div>
+                        </div>
+                        <div class="space-x-1">
+                            <button onclick="openModal(${s.id})" class="px-2.5 py-1.5 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 rounded-lg text-xs transition"><i class="fa-solid fa-pen"></i></button>
+                            <button onclick="deleteService(${s.id})" class="px-2.5 py-1.5 bg-red-100 dark:bg-red-900/30 text-red-600 hover:bg-red-200 rounded-lg text-xs transition"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
         function formatDate(dateStr) {
             if (!dateStr) return '';
-            const p = dateStr.split('-');
-            return `${p[2]}/${p[1]}/${p[0]}`;
+            const [y, m, d] = dateStr.split('-');
+            return `${d}/${m}/${y}`;
         }
 
-        function escapeHTML(str) {
-            return str.replace(/[&<>'"]/g, 
-                tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
-            );
+        function escapeHtml(text) {
+            if (!text) return '';
+            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
         }
 
-        // Grafici Chart.js
         function initCharts() {
             const ctxTrend = document.getElementById('trendChart').getContext('2d');
             trendChartInstance = new Chart(ctxTrend, {
-                type: 'bar',
-                data: { labels: [], datasets: [
-                    { label: 'Ricavi Lordi', data: [], backgroundColor: '#6366f1', borderRadius: 4 },
-                    { label: 'Costi', data: [], backgroundColor: '#ef4444', borderRadius: 4 }
-                ]},
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+                type: 'line',
+                data: { labels: [], datasets: [{ label: 'Incasso Lordo', data: [], borderColor: '#6366f1', backgroundColor: 'rgba(99, 102, 241, 0.1)', fill: true, tension: 0.3 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
             });
 
             const ctxServices = document.getElementById('servicesChart').getContext('2d');
             servicesChartInstance = new Chart(ctxServices, {
                 type: 'doughnut',
-                data: { labels: [], datasets: [{ data: [], backgroundColor: ['#6366f1', '#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6'] }]},
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+                data: { labels: [], datasets: [{ data: [], backgroundColor: ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'] }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } } }
             });
         }
 
         function updateCharts() {
             if (!trendChartInstance || !servicesChartInstance) return;
-            const filtered = getFilteredServices();
 
-            // Raggruppa per data per il grafico trend
-            const grouped = {};
-            filtered.sort((a,b) => new Date(a.date) - new Date(b.date)).forEach(s => {
-                if (!grouped[s.date]) grouped[s.date] = { gross: 0, costs: 0 };
-                grouped[s.date].gross += Number(s.price);
-                grouped[s.date].costs += Number(s.costs || 0);
-            });
+            const filtered = getFilteredServices().sort((a, b) => new Date(a.date) - new Date(b.date));
+            const dates = filtered.map(s => formatDate(s.date));
+            const prices = filtered.map(s => s.price);
 
-            trendChartInstance.data.labels = Object.keys(grouped).map(d => formatDate(d));
-            trendChartInstance.data.datasets[0].data = Object.values(grouped).map(g => g.gross);
-            trendChartInstance.data.datasets[1].data = Object.values(grouped).map(g => g.costs);
-            trendChartInstance.update();
-
-            // Raggruppa per tipologia servizi
-            const types = {};
-            filtered.forEach(s => {
-                types[s.type] = (types[s.type] || 0) + 1;
-            });
-
-            servicesChartInstance.data.labels = Object.keys(types);
-            servicesChartInstance.data.datasets[0].data = Object.values(types);
-            servicesChartInstance.update();
-        }
-
-        // Esportazione CSV
-        function exportCSV() {
-            if (services.length === 0) {
-                alert('Nessun dato da esportare.');
-                return;
-            }
-            let csv = 'Data,Indirizzo/Cliente,Tipologia,Prezzo Lordo,Costi,Guadagno Netto,Note\n';
-            services.forEach(s => {
-                const net = s.price - (s.costs || 0);
-                csv += `"${s.date}","${s.address}","${s.type}",${s.price},${s.costs || 0},${net},"${s.notes || ''}"\n`;
-            });
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.setAttribute('href', url);
-            a.setAttribute('download', 'homeframe_report.csv');
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-        }
-
-        // Dark Mode
-        function toggleDarkMode() {
-            isDarkMode = !isDarkMode;
-            document.documentElement.classList.toggle('dark', isDarkMode);
-            localStorage.setItem('homeframe_dark', isDarkMode);
-            updateThemeIcon();
-        }
-
-        function updateThemeIcon() {
-            const icon = document.getElementById('themeIcon');
-            icon.className = isDarkMode ? 'fa-solid fa-sun text-sm text-yellow-400' : 'fa-solid fa-moon text-sm text-slate-600';
-        }
-    </script>
-</body>
-</html>
+            trendChartInstance.data.labels = dates;
+            trendChartInstance.data.datasets[0].data = prices;
+            trendChartInstance.options.scales = {
+                y: { grid: { color: isDarkMode ? '#334155' : '#f1f5f9' }, ticks: { color: isDarkMode ? '#94a3b8' : '#64748b' } },
+                x: { grid: { display: false }, ticks: { color: isDarkMode ? '#94
