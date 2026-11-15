@@ -28,58 +28,103 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, collection, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // CONFIGURAZIONE FIREBASE
+        const firebaseConfig = {
+            apiKey: "AIzaSyCMUhTSbpOgImlNWedtNEr3YoYJhKfbUYE",
+            authDomain: "homeframe-app-6c455.firebaseapp.com",
+            projectId: "homeframe-app-6c455",
+            storageBucket: "homeframe-app-6c455.firebasestorage.app",
+            messagingSenderId: "530461573958",
+            appId: "1:530461573958:web:054be3d981dc8839781b47"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const googleProvider = new GoogleAuthProvider();
+
+        window.loginWithGoogle = async function() {
+            try {
+                await signInWithPopup(auth, googleProvider);
+            } catch (error) {
+                console.error("Errore login Google:", error);
+                alert("Errore durante l'accesso con Google: " + error.message);
+            }
+        };
+
+        window.logoutUser = async function() {
+            await signOut(auth);
+        };
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                window.currentUser = user;
+                document.getElementById('authScreen').classList.add('hidden');
+                document.getElementById('currentUserDisplay').textContent = user.displayName || user.email;
+                document.getElementById('userProfileBadge').classList.remove('hidden');
+                document.getElementById('userProfileBadge').classList.add('flex');
+                await loadCloudData(user.uid);
+            } else {
+                window.currentUser = null;
+                window.services = [];
+                document.getElementById('authScreen').classList.remove('hidden');
+                document.getElementById('userProfileBadge').classList.add('hidden');
+                document.getElementById('userProfileBadge').classList.remove('flex');
+                updateDashboard();
+                renderTable();
+            }
+        });
+
+        window.saveCloudData = async function() {
+            if (!window.currentUser) return;
+            try {
+                const userDocRef = doc(db, "users", window.currentUser.uid);
+                await setDoc(userDocRef, { services: window.services });
+            } catch (e) {
+                console.error("Errore salvataggio cloud:", e);
+            }
+        };
+
+        async function loadCloudData(uid) {
+            try {
+                const userDocRef = doc(db, "users", uid);
+                const docSnap = await getDoc(userDocRef);
+                if (docSnap.exists()) {
+                    window.services = docSnap.data().services || [];
+                } else {
+                    window.services = [];
+                }
+                updateDashboard();
+                renderTable();
+                renderCalendarDayView();
+            } catch (e) {
+                console.error("Errore caricamento cloud:", e);
+                window.services = [];
+            }
+        }
+    </script>
 </head>
 <body class="h-full bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 transition-colors duration-200 flex flex-col">
 
-    <!-- SCHERMATA LOGIN / REGISTRAZIONE -->
+    <!-- SCHERMATA LOGIN / GOOGLE -->
     <div id="authScreen" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-4 hidden">
-        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md p-8 border border-slate-200 dark:border-slate-700">
-            <div class="text-center mb-6">
-                <div class="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400 mb-3 text-2xl">
-                    <i class="fa-solid fa-camera-retro"></i>
-                </div>
-                <h1 class="text-2xl font-bold tracking-tight">Homeframe</h1>
-                <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Gestione e rendiconti per Fotografi Immobiliari</p>
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md p-8 border border-slate-200 dark:border-slate-700 text-center">
+            <div class="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400 mb-3 text-2xl">
+                <i class="fa-solid fa-camera-retro"></i>
             </div>
+            <h1 class="text-2xl font-bold tracking-tight">Homeframe</h1>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1 mb-6">Sincronizza i tuoi servizi su tutti i dispositivi</p>
 
-            <div id="authError" class="mb-4 p-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-sm rounded-lg hidden"></div>
-
-            <form id="authForm" onsubmit="handleAuth(event)" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">Email</label>
-                    <input type="email" id="authEmail" required class="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-transparent text-sm focus:ring-2 focus:ring-brand-500 outline-none">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">Password</label>
-                    <input type="password" id="authPassword" required class="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-transparent text-sm focus:ring-2 focus:ring-brand-500 outline-none">
-                </div>
-                <div id="nameFieldContainer" class="hidden">
-                    <label class="block text-xs font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">Nome Studio / Fotografo</label>
-                    <input type="text" id="authName" class="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-transparent text-sm focus:ring-2 focus:ring-brand-500 outline-none">
-                </div>
-
-                <button type="submit" id="authSubmitBtn" class="w-full py-3 bg-brand-600 hover:bg-brand-700 text-white font-medium rounded-lg text-sm transition shadow-lg shadow-brand-500/20">Accedi</button>
-            </form>
-
-            <!-- Pulsante Login con Google -->
-            <div class="mt-3">
-                <button type="button" onclick="loginWithGoogle()" class="w-full py-2.5 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-600 font-medium rounded-lg text-sm transition flex items-center justify-center space-x-2 shadow-sm">
-                    <i class="fa-brands fa-google text-red-500"></i>
-                    <span>Accedi con Google</span>
-                </button>
-            </div>
-
-            <div class="mt-4 text-center">
-                <button type="button" onclick="toggleAuthMode()" id="authSwitchModeBtn" class="text-xs text-brand-600 dark:text-brand-400 hover:underline">Non hai un account? Registrati</button>
-            </div>
-
-            <div class="relative my-6">
-                <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-200 dark:border-slate-700"></div></div>
-                <div class="relative flex justify-center text-xs uppercase"><span class="bg-white dark:bg-slate-800 px-2 text-slate-400">Oppure</span></div>
-            </div>
-
-            <button onclick="loginAsGuest()" class="w-full py-2.5 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-medium rounded-lg text-sm transition">
-                Continua come Ospite (Locale)
+            <button type="button" onclick="loginWithGoogle()" class="w-full py-3 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-600 font-medium rounded-lg text-sm transition flex items-center justify-center space-x-3 shadow-sm">
+                <i class="fa-brands fa-google text-red-500 text-lg"></i>
+                <span>Accedi con Google</span>
             </button>
         </div>
     </div>
@@ -99,8 +144,8 @@
 
             <div class="flex items-center space-x-3">
                 <div id="userProfileBadge" class="hidden items-center space-x-2 text-xs bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-700">
-                    <span id="currentUserDisplay" class="font-medium text-slate-700 dark:text-slate-300">Ospite</span>
-                    <button onclick="logout()" class="text-red-500 hover:text-red-600 ml-1" title="Esci"><i class="fa-solid fa-power-off"></i></button>
+                    <span id="currentUserDisplay" class="font-medium text-slate-700 dark:text-slate-300">Utente</span>
+                    <button onclick="logoutUser()" class="text-red-500 hover:text-red-600 ml-1" title="Esci"><i class="fa-solid fa-power-off"></i></button>
                 </div>
 
                 <button onclick="toggleDarkMode()" class="w-9 h-9 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 transition">
@@ -112,7 +157,6 @@
 
     <!-- CONTENUTO PRINCIPALE -->
     <main class="flex-1 max-w-7xl w-full mx-auto px-4 py-6 space-y-6">
-
         <!-- NAVIGAZIONE SCHEDE -->
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
             <div class="flex flex-wrap items-center gap-2">
@@ -311,13 +355,12 @@
         </div>
     </div>
 
-    <!-- LOGICA JAVASCRIPT -->
+    <!-- LOGICA APPLICAZIONE -->
     <script>
-        let services = [];
+        window.services = [];
+        window.currentUser = null;
         let currentFilter = 'all';
         let isDarkMode = false;
-        let currentUser = null;
-        let isRegisterMode = false;
         let trendChartInstance = null;
         let servicesChartInstance = null;
 
@@ -327,17 +370,6 @@
                 document.documentElement.classList.add('dark');
                 updateThemeIcon();
             }
-
-            const savedUser = localStorage.getItem('homeframe_current_user');
-            if (savedUser) {
-                currentUser = savedUser;
-                document.getElementById('authScreen').classList.add('hidden');
-                updateUserProfileBadge();
-                loadUserData();
-            } else {
-                document.getElementById('authScreen').classList.remove('hidden');
-            }
-
             document.getElementById('serviceDate').valueAsDate = new Date();
             document.getElementById('calendarPicker').valueAsDate = new Date();
             initCharts();
@@ -355,81 +387,6 @@
         function updateThemeIcon() {
             const icon = document.getElementById('themeIcon');
             icon.className = isDarkMode ? 'fa-solid fa-sun text-sm text-yellow-400' : 'fa-solid fa-moon text-sm text-slate-600';
-        }
-
-        function toggleAuthMode() {
-            isRegisterMode = !isRegisterMode;
-            document.getElementById('nameFieldContainer').classList.toggle('hidden', !isRegisterMode);
-            document.getElementById('authSubmitBtn').textContent = isRegisterMode ? 'Registrati' : 'Accedi';
-            document.getElementById('authSwitchModeBtn').textContent = isRegisterMode ? 'Hai già un account? Accedi' : 'Non hai un account? Registrati';
-        }
-
-        function handleAuth(event) {
-            event.preventDefault();
-            const email = document.getElementById('authEmail').value.trim();
-            const pass = document.getElementById('authPassword').value;
-            const name = document.getElementById('authName').value.trim();
-
-            if (!email || !pass) return;
-
-            currentUser = name ? `${name} (${email})` : email;
-            localStorage.setItem('homeframe_current_user', currentUser);
-            document.getElementById('authScreen').classList.add('hidden');
-            updateUserProfileBadge();
-            loadUserData();
-        }
-
-        function loginWithGoogle() {
-            // Predisposto per l'integrazione Firebase Google Auth
-            currentUser = "Utente Google (fotografo@gmail.com)";
-            localStorage.setItem('homeframe_current_user', currentUser);
-            document.getElementById('authScreen').classList.add('hidden');
-            updateUserProfileBadge();
-            loadUserData();
-        }
-
-        function loginAsGuest() {
-            currentUser = 'Ospite';
-            localStorage.setItem('homeframe_current_user', currentUser);
-            document.getElementById('authScreen').classList.add('hidden');
-            updateUserProfileBadge();
-            loadUserData();
-        }
-
-        function logout() {
-            localStorage.removeItem('homeframe_current_user');
-            currentUser = null;
-            services = [];
-            document.getElementById('authEmail').value = '';
-            document.getElementById('authPassword').value = '';
-            document.getElementById('authScreen').classList.remove('hidden');
-        }
-
-        function updateUserProfileBadge() {
-            const badge = document.getElementById('userProfileBadge');
-            const display = document.getElementById('currentUserDisplay');
-            if (currentUser) {
-                display.textContent = currentUser;
-                badge.classList.remove('hidden');
-                badge.classList.add('flex');
-            } else {
-                badge.classList.add('hidden');
-                badge.classList.remove('flex');
-            }
-        }
-
-        function loadUserData() {
-            const storageKey = `homeframe_data_${currentUser || 'guest'}`;
-            const data = localStorage.getItem(storageKey);
-            services = data ? JSON.parse(data) : [];
-            updateDashboard();
-            renderTable();
-            renderCalendarDayView();
-        }
-
-        function saveUserData() {
-            const storageKey = `homeframe_data_${currentUser || 'guest'}`;
-            localStorage.setItem(storageKey, JSON.stringify(services));
         }
 
         function switchTab(tab) {
@@ -472,7 +429,7 @@
 
         function getFilteredServices() {
             const now = new Date();
-            return services.filter(s => {
+            return window.services.filter(s => {
                 const sDate = new Date(s.date);
                 if (currentFilter === 'today') {
                     return sDate.toDateString() === now.toDateString();
@@ -513,7 +470,7 @@
             document.getElementById('serviceModal').classList.remove('hidden');
             if (id) {
                 document.getElementById('modalTitle').textContent = 'Modifica Servizio';
-                const s = services.find(item => item.id === id);
+                const s = window.services.find(item => item.id === id);
                 if (s) {
                     document.getElementById('serviceId').value = s.id;
                     document.getElementById('serviceAddress').value = s.address;
@@ -546,16 +503,16 @@
             const notes = document.getElementById('serviceNotes').value;
 
             if (id) {
-                const idx = services.findIndex(s => s.id == id);
+                const idx = window.services.findIndex(s => s.id == id);
                 if (idx !== -1) {
-                    services[idx] = { id: Number(id), address, date, type, price, costs, notes };
+                    window.services[idx] = { id: Number(id), address, date, type, price, costs, notes };
                 }
             } else {
                 const newService = { id: Date.now(), address, date, type, price, costs, notes };
-                services.push(newService);
+                window.services.push(newService);
             }
 
-            saveUserData();
+            if (typeof window.saveCloudData === 'function') window.saveCloudData();
             closeModal();
             updateDashboard();
             renderTable();
@@ -564,8 +521,8 @@
 
         function deleteService(id) {
             if (confirm('Sei sicuro di voler eliminare questo servizio?')) {
-                services = services.filter(s => s.id !== id);
-                saveUserData();
+                window.services = window.services.filter(s => s.id !== id);
+                if (typeof window.saveCloudData === 'function') window.saveCloudData();
                 updateDashboard();
                 renderTable();
                 renderCalendarDayView();
@@ -578,7 +535,7 @@
             const search = document.getElementById('searchInput').value.toLowerCase();
             const typeFilter = document.getElementById('typeFilter').value;
 
-            const filtered = services.filter(s => {
+            const filtered = window.services.filter(s => {
                 const matchSearch = s.address.toLowerCase().includes(search) || (s.notes && s.notes.toLowerCase().includes(search));
                 const matchType = !typeFilter || s.type === typeFilter;
                 return matchSearch && matchType;
@@ -614,7 +571,7 @@
             });
         }
 
-        function renderCalendarDayView() {
+        window.renderCalendarDayView = function() {
             const picker = document.getElementById('calendarPicker').value;
             const container = document.getElementById('calendarDayServices');
             const title = document.getElementById('calendarSelectedDateTitle');
@@ -622,7 +579,7 @@
             if (!picker) return;
 
             title.textContent = `Servizi programmati per il ${formatDate(picker)}:`;
-            const dayServices = services.filter(s => s.date === picker);
+            const dayServices = window.services.filter(s => s.date === picker);
 
             container.innerHTML = '';
             if (dayServices.length === 0) {
@@ -693,4 +650,36 @@
             trendChartInstance.data.datasets[0].data = prices;
             trendChartInstance.options.scales = {
                 y: { grid: { color: isDarkMode ? '#334155' : '#f1f5f9' }, ticks: { color: isDarkMode ? '#94a3b8' : '#64748b' } },
-                x: { grid: { display: false }, ticks: { color: isDarkMode ? '#94
+                x: { grid: { display: false }, ticks: { color: isDarkMode ? '#94a3b8' : '#64748b' } }
+            };
+            trendChartInstance.update();
+
+            const typeCounts = {};
+            filtered.forEach(s => {
+                typeCounts[s.type] = (typeCounts[s.type] || 0) + 1;
+            });
+
+            servicesChartInstance.data.labels = Object.keys(typeCounts);
+            servicesChartInstance.data.datasets[0].data = Object.values(typeCounts);
+            servicesChartInstance.update();
+        }
+
+        function exportCSV() {
+            if (window.services.length === 0) {
+                alert('Nessun dato da esportare.');
+                return;
+            }
+            let csv = 'Data,Indirizzo,Tipologia,Prezzo Lordo,Costi,Prezzo Netto,Note\n';
+            window.services.forEach(s => {
+                const net = s.price - (s.costs || 0);
+                csv += `"${s.date}","${s.address.replace(/"/g, '""')}","${s.type}",${s.price},${s.costs || 0},${net},"${(s.notes || '').replace(/"/g, '""')}"\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `homeframe_report_${new Date().toISOString().slice(0,10)}.csv`;
+            link.click();
+        }
+    </script>
+</body>
+</html>
