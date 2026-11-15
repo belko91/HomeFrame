@@ -32,7 +32,7 @@
     <!-- Firebase SDKs -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         // CONFIGURAZIONE FIREBASE
@@ -50,14 +50,20 @@
         const db = getFirestore(app);
         const googleProvider = new GoogleAuthProvider();
 
+        // Utilizza signInWithRedirect per compatibilità nativa con WebView/APK Android
         window.loginWithGoogle = async function() {
             try {
-                await signInWithPopup(auth, googleProvider);
+                await signInWithRedirect(auth, googleProvider);
             } catch (error) {
                 console.error("Errore login Google:", error);
                 alert("Errore durante l'accesso con Google: " + error.message);
             }
         };
+
+        // Gestisce il risultato del reindirizzamento al ritorno da Google
+        getRedirectResult(auth).catch((error) => {
+            console.error("Errore redirect Google:", error);
+        });
 
         window.logoutUser = async function() {
             await signOut(auth);
